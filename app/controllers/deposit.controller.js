@@ -7,6 +7,7 @@ const creditadmin = db.creditadmin;
 const user = db.user;
 
 const sequelize = require("sequelize");
+const sequelizeInstance = db.sequelize;
 const op = sequelize.Op;
 
 
@@ -256,7 +257,7 @@ exports.createWithdraw = async (req, res) => {
           // preamount: peopledata.creditwithdraw,
           peopleId: req.body.peopleId,
           // net: Number(peopledata.creditwithdraw) - Number(amount),
-          net: Number(peopledata.credit) - Number(amount),
+          net: (Number(peopledata.credit) - Number(amount)),
           status: 0,
         };
       } catch (err) { }
@@ -264,8 +265,8 @@ exports.createWithdraw = async (req, res) => {
       return await deposit
         .create(data_deposit)
         .then((data) => {
-          people.increment("credit", {
-            by: -amount,
+          people.decrement("credit", {
+            by: Number(amount),
             where: { id: req.body.peopleId },
           });
           res.status(200).send({ status: true });
@@ -284,6 +285,7 @@ exports.createWithdraw = async (req, res) => {
 };
 
 exports.updateWithdraw = async (req, res) => {
+  const transaction = await sequelizeInstance.transaction();
   const id = req.body.id;
 
   const peopleId = req.body.peopleId;
@@ -292,6 +294,21 @@ exports.updateWithdraw = async (req, res) => {
   const amount = req.body.amount;
   const note = req.body.note;
   let peopledata = null;
+
+  let oneWithdraw = await deposit.findOne({
+    where: { id: id, status: 0 },
+    lock: transaction.LOCK.UPDATE,  // Lock the row to prevent concurrent updates
+    transaction: transaction         // Use the transaction
+  });
+
+  if (!oneWithdraw) {
+    const updatedTrade = await deposit.findOne({
+      where: { id: id },
+      transaction: transaction
+    });
+    await transaction.commit(); // Commit the transaction
+    return res.status(200).send(updatedTrade);
+  }
   try {
     peopledata = await people.findOne({
       // attributes: ["id", "credit", "creditwithdraw"],
@@ -309,14 +326,15 @@ exports.updateWithdraw = async (req, res) => {
       .update(
         { status: status, userId: userId, note: note },
         {
-          where: { id: id },
+          where: { id: id }, transaction: transaction
         }
       )
       .then(async (data) => {
-
+        await transaction.commit();
         res.status(200).send({ status: true });
       })
-      .catch((err) => {
+      .catch(async (err) => {
+        await transaction.rollback();
         res.status(500).send({
           status: 500,
           message:
@@ -326,19 +344,21 @@ exports.updateWithdraw = async (req, res) => {
   } else {
     deposit
       .update(
-        { status: status, userId: userId, preamount: peopledata.credit, net: Number(peopledata.credit) + Number(amount), note: note },
+        { status: status, userId: userId, preamount: peopledata.credit, net: (Number(peopledata.credit) + Number(amount)), note: note },
         {
-          where: { id: id },
+          where: { id: id }, transaction: transaction
         }
       )
       .then(async (data) => {
         people.increment("credit", {
-          by: amount,
+          by: Number(amount),
           where: { id: peopleId },
         });
+        await transaction.commit();
         res.status(200).send({ status: true });
       })
-      .catch((err) => {
+      .catch(async (err) => {
+        await transaction.rollback();
         res.status(500).send({
           status: 500,
           message:
