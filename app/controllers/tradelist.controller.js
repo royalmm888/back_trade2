@@ -110,8 +110,11 @@ function countDecimals(number) {
 // cron.schedule('* * * * *', async() => { //ทุกนาที
 
 cron.schedule('*/10 * * * * *', async () => {
-  const NOW = dayjs().subtract(4, 'second').format("YYYY-MM-DD HH:mm:ss");
-  const DayBefore = dayjs().subtract(7, "day").format("YYYY-MM-DD HH:mm:ss");
+  // const NOW = dayjs().subtract(4, 'second').format("YYYY-MM-DD HH:mm:ss");
+  // const DayBefore = dayjs().subtract(7, "day").format("YYYY-MM-DD HH:mm:ss");
+  const NOW = dayjs().utc().tz("Asia/Bangkok").format("YYYY-MM-DD HH:mm:ss");
+  const DayBefore = dayjs().utc().tz("Asia/Bangkok").subtract(7, "day").format("YYYY-MM-DD HH:mm:ss");
+
   try {
     const countTrade = await tradelist.count({
       where: {
@@ -185,22 +188,22 @@ cron.schedule('*/10 * * * * *', async () => {
             } else if (trade.symbol === "XAUUSD") {
               symbolName = trade.symbol.substring(0, trade.symbol.length - 3)
               try {
- 
-                  const options = {
-                    method: 'GET',
-                    url: 'https://www.goldapi.io/api/XAU/USD',
-                    headers: {
-                      "x-access-token": api_key_gold,
-                      "Content-Type": "application/json"
-                    }
-                  };
-                  const response = await axios.request(options);
+
+                const options = {
+                  method: 'GET',
+                  url: 'https://www.goldapi.io/api/XAU/USD',
+                  headers: {
+                    "x-access-token": api_key_gold,
+                    "Content-Type": "application/json"
+                  }
+                };
+                const response = await axios.request(options);
                 closing_price = Number(response.data.price) === Number(trade.opening_price) ? randomCoinLossOrWin(Number(trade.opening_price)) : response.data.price;
 
               } catch (error) {
                 closing_price = randomCoinLossOrWin(trade.opening_price)
               }
-            } 
+            }
             else {
               const avax = data.find(item => item.symbol === trade.symbol);
               closing_price = avax.price
@@ -539,7 +542,7 @@ exports.createUserTradeConfirm = async (req, res) => {
 
   const openingTime = dayjs().tz("Asia/Bangkok").format("YYYY-MM-DD HH:mm:ss");
   const closingTime = dayjs().tz("Asia/Bangkok").add(req.body.countTime, 'minute').format("YYYY-MM-DD HH:mm:ss");
-  const user_data = {
+  let user_data = {
 
     symbol: symbolName,
     type_order: (req.body.selectSell !== 1 && req.body.selectSell !== 2 ? 1 : req.body.selectSell),
