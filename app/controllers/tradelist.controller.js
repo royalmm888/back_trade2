@@ -1,7 +1,13 @@
 const db = require("../models");
 const tradelist = db.tradelist;
 const people = db.people;
+
 const dayjs = require("dayjs");
+const utc = require("dayjs/plugin/utc");
+const timezone = require("dayjs/plugin/timezone");
+dayjs.extend(utc);
+dayjs.extend(timezone);
+
 const axios = require('axios');
 const api_key = "4c1ae80e15-97c9c85ef4-sibb6h";
 const api_key_gold = "goldapi-ltotnpsm3x2mr8o-io";
@@ -528,14 +534,20 @@ exports.getTradePrice = async (req, res) => {
 exports.createUserTradeConfirm = async (req, res) => {
   const symbolName = req.body.symbol.toUpperCase();
   const getPrice = req.body.getPrice;
+
+  // const openingTime = dayjs().tz("Asia/Bangkok").format("YYYY-MM-DD HH:mm:ss");
+
+  const openingTime = dayjs().tz("Asia/Yangon").format("YYYY-MM-DD HH:mm:ss");
+  const closingTime = dayjs().tz("Asia/Yangon").add(req.body.countTime, 'minute').format("YYYY-MM-DD HH:mm:ss");
   const user_data = {
 
     symbol: symbolName,
     type_order: (req.body.selectSell !== 1 && req.body.selectSell !== 2 ? 1 : req.body.selectSell),
     amount: Number(req.body.amount),
-    opening_time: dayjs(),
+    opening_time: openingTime,
     opening_price: Number(getPrice),
-    closing_time: dayjs().add(req.body.countTime, 'minute'), // second , minute , day
+    closing_time: closingTime,
+    // closing_time: dayjs().add(req.body.countTime, 'minute'), // second , minute , day
     status: 0,
     adminstatus: 0,
     selectPercent: req.body.selectPercent,
