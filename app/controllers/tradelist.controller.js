@@ -537,8 +537,8 @@ exports.createUserTradeConfirm = async (req, res) => {
 
   // const openingTime = dayjs().tz("Asia/Bangkok").format("YYYY-MM-DD HH:mm:ss");
 
-  const openingTime = dayjs().tz("Asia/Yangon").format("YYYY-MM-DD HH:mm:ss");
-  const closingTime = dayjs().tz("Asia/Yangon").add(req.body.countTime, 'minute').format("YYYY-MM-DD HH:mm:ss");
+  const openingTime = dayjs().tz("Asia/Bangkok").format("YYYY-MM-DD HH:mm:ss");
+  const closingTime = dayjs().tz("Asia/Bangkok").add(req.body.countTime, 'minute').format("YYYY-MM-DD HH:mm:ss");
   const user_data = {
 
     symbol: symbolName,
