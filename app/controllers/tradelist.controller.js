@@ -742,17 +742,31 @@ exports.getUserAllTradeAdmin = async (req, res) => {
     })
     .then((data) => {
 
-      const dataWithTimestamp = data.map(item => {
-       const itemData = item.toJSON();
+       const currentTimeBKK = dayjs().tz("Asia/Bangkok");
+      
+      const dataWithCountdown = data.map(item => {
+        const itemData = item.toJSON();
         
-        // เฉพาะตัวที่ตรงกับ dayjs(alltrade.closing_time).tz("Asia/Bangkok").valueOf() + 3000
-        const closingTime = dayjs.tz(itemData.closing_time, "Asia/Bangkok");
-        itemData.closingTimestamp = closingTime.valueOf() + 3000;
+        // แปลง closing_time เป็นวัตถุ dayjs ในโซนเวลาไทย
+        const closingTimeBKK = dayjs.tz(itemData.closing_time, "Asia/Bangkok");
+        
+        // คำนวณเวลาที่เหลือในหน่วยมิลลิวินาที (ไม่น้อยกว่า 0)
+        const timeRemainingMs = Math.max(0, closingTimeBKK.diff(currentTimeBKK));
+        
+        // บวกเพิ่ม 3000 มิลลิวินาที
+        const countdownMs = timeRemainingMs + 3000;
+        
+        // เพิ่มข้อมูลสำหรับ Countdown_UI
+        // itemData.countdownMs = countdownMs;
+        
+        // คำนวณ timestamp ที่ต้องนับถอยหลังถึง (เวลาปัจจุบัน + เวลาที่เหลือ + 3วินาที)
+        // นี่คือสิ่งที่ใช้กับ Countdown_UI
+        itemData.closingTimestamp = currentTimeBKK.valueOf() + countdownMs;
         
         return itemData;
       });
       
-      res.send(dataWithTimestamp);
+      res.send(dataWithCountdown);
     })
     .catch((err) => {
       res.status(500).send({
