@@ -541,7 +541,7 @@ exports.createUserTradeConfirm = async (req, res) => {
   // const openingTime = dayjs().tz("Asia/Bangkok").format("YYYY-MM-DD HH:mm:ss");
 
   const openingTime = dayjs().tz("Asia/Bangkok").format("YYYY-MM-DD HH:mm:ss");
-  const closingTime = dayjs().tz("Asia/Bangkok").add(req.body.countTime, 'minute').format("YYYY-MM-DD HH:mm:ss");
+  const closingTime = dayjs().tz("Asia/Bangkok").add(req.body.countTime, 'second').format("YYYY-MM-DD HH:mm:ss");
   let user_data = {
 
     symbol: symbolName,
@@ -578,6 +578,32 @@ exports.createUserTradeConfirm = async (req, res) => {
     });
 }
 
+// exports.getOneUserTrading = async (req, res) => {
+//   await tradelist
+//     .findAll({
+//       include: [
+//         {
+//           model: people,
+//           as: "people",
+//           attributes: [
+//             "uid",
+//             "credit",
+
+//           ],
+//         }
+//       ],
+//       where: { status: 0, peopleId: req.params.id },
+//       order: [["createdAt", "DESC"]],
+//     }).then((data) => {
+//       res.send(data);
+//     })
+//     .catch((err) => {
+//       res.status(500).send({
+//         message: err.message || "Some error occurred while retrieving User.",
+//       });
+//     });
+// }
+
 exports.getOneUserTrading = async (req, res) => {
   await tradelist
     .findAll({
@@ -588,21 +614,38 @@ exports.getOneUserTrading = async (req, res) => {
           attributes: [
             "uid",
             "credit",
-
           ],
         }
       ],
       where: { status: 0, peopleId: req.params.id },
       order: [["createdAt", "DESC"]],
-    }).then((data) => {
-      res.send(data);
+    })
+    .then((data) => {
+      // คำนวณความต่างของเวลาก่อนส่งไปยัง frontend
+      const currentTime = dayjs().tz("Asia/Bangkok");
+      
+      // เพิ่มข้อมูลความต่างของเวลาลงในแต่ละรายการ
+      const dataWithTimeDiff = data.map(item => {
+        const itemData = item.toJSON(); // แปลง Sequelize instance เป็น JSON
+        
+        // คำนวณความต่างของเวลาปิดการซื้อขาย (อยู่ในหน่วยวินาที)
+        const closingTime = dayjs.tz(itemData.closing_time, "Asia/Bangkok");
+        const timeDiff = closingTime.diff(currentTime, "second");
+        
+        // ใช้ Math.max เพื่อให้แน่ใจว่าไม่มีค่าติดลบ
+        itemData.timeRemainingSeconds = Math.max(0, timeDiff);
+        
+        return itemData;
+      });
+      
+      res.send(dataWithTimeDiff);
     })
     .catch((err) => {
       res.status(500).send({
         message: err.message || "Some error occurred while retrieving User.",
       });
     });
-}
+};
 exports.getOneUserAllTrade = async (req, res) => {
   await tradelist
     .findAll({
@@ -653,6 +696,32 @@ exports.getOneUserAllTradeAdmin = async (req, res) => {
       });
     });
 }
+// exports.getUserAllTradeAdmin = async (req, res) => {
+//   await tradelist
+//     .findAll({
+//       include: [
+//         {
+//           model: people,
+//           as: "people",
+//           attributes: [
+//             "uid",
+//             "credit",
+//             "firstname"
+
+//           ],
+//         }
+//       ],
+//       where: { status: 0 },
+//       order: [["createdAt", "ASC"]],
+//     }).then((data) => {
+//       res.send(data);
+//     })
+//     .catch((err) => {
+//       res.status(500).send({
+//         message: err.message || "Some error occurred while retrieving User.",
+//       });
+//     });
+// }
 exports.getUserAllTradeAdmin = async (req, res) => {
   await tradelist
     .findAll({
@@ -664,22 +733,32 @@ exports.getUserAllTradeAdmin = async (req, res) => {
             "uid",
             "credit",
             "firstname"
-
           ],
         }
       ],
       where: { status: 0 },
       order: [["createdAt", "ASC"]],
-    }).then((data) => {
-      res.send(data);
+    })
+    .then((data) => {
+
+      const dataWithTimestamp = data.map(item => {
+       const itemData = item.toJSON();
+        
+        // เฉพาะตัวที่ตรงกับ dayjs(alltrade.closing_time).tz("Asia/Bangkok").valueOf() + 3000
+        const closingTime = dayjs.tz(itemData.closing_time, "Asia/Bangkok");
+        itemData.closingTimestamp = closingTime.valueOf() + 3000;
+        
+        return itemData;
+      });
+      
+      res.send(dataWithTimestamp);
     })
     .catch((err) => {
       res.status(500).send({
         message: err.message || "Some error occurred while retrieving User.",
       });
     });
-}
-
+};
 exports.getUserAllTradeHistoryAdmin = async (req, res) => {
   await tradelist
     .findAll({
