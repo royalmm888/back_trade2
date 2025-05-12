@@ -112,8 +112,9 @@ function countDecimals(number) {
 cron.schedule('*/10 * * * * *', async () => {
   // const NOW = dayjs().subtract(4, 'second').format("YYYY-MM-DD HH:mm:ss");
   // const DayBefore = dayjs().subtract(7, "day").format("YYYY-MM-DD HH:mm:ss");
-  const NOW = dayjs().utc().tz("Asia/Bangkok").format("YYYY-MM-DD HH:mm:ss");
-  const DayBefore = dayjs().utc().tz("Asia/Bangkok").subtract(7, "day").format("YYYY-MM-DD HH:mm:ss");
+// วิธีที่แนะนำมากกว่า - ตรงไปตรงมา
+const NOW = dayjs().tz("Asia/Bangkok").subtract(4, 'second').format("YYYY-MM-DD HH:mm:ss");
+const DayBefore = dayjs().tz("Asia/Bangkok").subtract(7, "day").format("YYYY-MM-DD HH:mm:ss");
 
   try {
     const countTrade = await tradelist.count({
@@ -541,7 +542,7 @@ exports.createUserTradeConfirm = async (req, res) => {
   // const openingTime = dayjs().tz("Asia/Bangkok").format("YYYY-MM-DD HH:mm:ss");
 
   const openingTime = dayjs().tz("Asia/Bangkok").format("YYYY-MM-DD HH:mm:ss");
-  const closingTime = dayjs().tz("Asia/Bangkok").add(req.body.countTime, 'second').format("YYYY-MM-DD HH:mm:ss");
+  const closingTime = dayjs().tz("Asia/Bangkok").add(req.body.countTime, 'minute').format("YYYY-MM-DD HH:mm:ss");
   let user_data = {
 
     symbol: symbolName,
