@@ -548,7 +548,7 @@ exports.createUserTradeConfirm = async (req, res) => {
   // const openingTime = dayjs().tz("Asia/Bangkok").format("YYYY-MM-DD HH:mm:ss");
   // const closingTime = dayjs().tz("Asia/Bangkok").add(req.body.countTime, 'minute').format("YYYY-MM-DD HH:mm:ss");
   const openingTime = dayjs().tz("Asia/Bangkok").toDate();
-  const closingTime = dayjs().tz("Asia/Bangkok").add(req.body.countTime, 'minute').toDate();
+  const closingTime = dayjs().tz("Asia/Bangkok").add(req.body.countTime, 'second').toDate();
 
 
   let user_data = {
@@ -670,7 +670,7 @@ exports.getOneUserAllTrade = async (req, res) => {
       //   }
       // ],
       where: { status: 1, peopleId: req.params.id },
-      order: [["createdAt", "DESC"]],
+      order: [["opening_time", "DESC"]],
     }).then((data) => {
       res.send(data);
     })
@@ -760,8 +760,8 @@ exports.getUserAllTradeAdmin = async (req, res) => {
 
         // ใช้ Math.max เพื่อให้แน่ใจว่าไม่มีค่าติดลบ
         itemData.closingTimestamp = Math.max(0, timeDiff) + 3;
-        console.log(dayjs().tz("Asia/Bangkok").format("YYYY-MM-DD HH:mm:ss"));
-        console.log(dayjs.tz(itemData.closing_time, "Asia/Bangkok").format("YYYY-MM-DD HH:mm:ss"));
+        // console.log(dayjs().tz("Asia/Bangkok").format("YYYY-MM-DD HH:mm:ss"));
+        // console.log(dayjs.tz(itemData.closing_time, "Asia/Bangkok").format("YYYY-MM-DD HH:mm:ss"));
 
 
 

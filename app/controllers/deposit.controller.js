@@ -714,7 +714,7 @@ exports.getOneUserWithDraw = async (req, res) => {
         },
       ],
       where: { type: 2, peopleId: req.params.id },
-      order: [["createdAt", "DESC"]],
+      order: [["sliptime", "DESC"]],
     })
     .then((data) => {
       res.send(data);
