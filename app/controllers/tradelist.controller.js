@@ -515,7 +515,14 @@ exports.getTradePrice = async (req, res) => {
         const response = await axios.request(options);
         getPrice = response.data.price;
       } catch (error) {
-        getPrice = genRand(2620, 2660, 3);
+        try {
+        const response = await axios.get(`https://api.fastforex.io/fetch-one?from=PAXG&to=USD&api_key=${api_key}`, {
+        });
+        getPrice = response.data.result.USD;
+      } catch (error) {
+       getPrice = genRand(3200, 3350, 3);
+      }
+        
       }
       symbolName += "USD";
     }
