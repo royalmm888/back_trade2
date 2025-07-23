@@ -206,7 +206,14 @@ cron.schedule('*/10 * * * * *', async () => {
                 closing_price = Number(response.data.price) === Number(trade.opening_price) ? randomCoinLossOrWin(Number(trade.opening_price)) : response.data.price;
 
               } catch (error) {
-                closing_price = randomCoinLossOrWin(trade.opening_price)
+                try {
+                  const response = await axios.get(`https://api.fastforex.io/fetch-one?from=PAXG&to=USD&api_key=${api_key}`, {
+                  });
+                  closing_price = Number(response.data.result.USD) === Number(trade.opening_price) ? randomCoinLossOrWin(Number(trade.opening_price)) : response.data.result.USD;
+
+                } catch (err) {
+                  closing_price = randomCoinLossOrWin(trade.opening_price)
+                }
               }
             }
             else {
@@ -516,13 +523,13 @@ exports.getTradePrice = async (req, res) => {
         getPrice = response.data.price;
       } catch (error) {
         try {
-        const response = await axios.get(`https://api.fastforex.io/fetch-one?from=PAXG&to=USD&api_key=${api_key}`, {
-        });
-        getPrice = response.data.result.USD;
-      } catch (error) {
-       getPrice = genRand(3200, 3350, 3);
-      }
-        
+          const response = await axios.get(`https://api.fastforex.io/fetch-one?from=PAXG&to=USD&api_key=${api_key}`, {
+          });
+          getPrice = response.data.result.USD;
+        } catch (err) {
+          getPrice = genRand(3200, 3350, 3);
+        }
+
       }
       symbolName += "USD";
     }
